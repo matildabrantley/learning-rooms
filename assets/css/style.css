@@ -1,3 +1,6 @@
+body {
+    background-color: black;
+}
 
 .full-grid {
     display: grid;
@@ -16,19 +19,26 @@
   }
 
 header {
+    text-align: center;
     grid-area: header;
-    background-color:black;
+    background-color:rgb(70, 25, 25);
     color: white;
+    border-radius: 5px;
 }
   
 nav {
     grid-area: controls;
     margin-left: 0.5rem;
     background-color:teal;
+    border-radius: 5px;
 }
   
 main {
     grid-area: world;
-    background-color: skyblue;
+}
+
+.island {
+    border-radius: 5px;
+    border: solid black 3px;
 }
   
