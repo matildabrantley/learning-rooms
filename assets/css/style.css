@@ -1,0 +1,34 @@
+
+.full-grid {
+    display: grid;
+  
+    grid-template-areas:
+      "controls header header"
+      "controls world world"
+      "controls world world";
+  
+    grid-template-columns: 200px 1fr 200px;
+    grid-template-rows: 0.2fr 1fr auto;
+    grid-gap: 10px;
+  
+    height: 100vh;
+    width: 100vw;
+  }
+
+header {
+    grid-area: header;
+    background-color:black;
+    color: white;
+}
+  
+nav {
+    grid-area: controls;
+    margin-left: 0.5rem;
+    background-color:teal;
+}
+  
+main {
+    grid-area: world;
+    background-color: skyblue;
+}
+  
