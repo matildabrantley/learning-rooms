@@ -5,8 +5,8 @@ class Vector2d {
     }
 
 	//distance between two 2d points using Math.hypot
-	distance (vector) {
-		Math.hypot(vector.x-this.x, vector.y-this.y)
+	distance(vector) {
+		return Math.hypot(vector.x - this.x, vector.y - this.y)
 	}
 
 	//add 2d vectors

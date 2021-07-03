@@ -2,7 +2,7 @@ var worldContainer = document.getElementById("world");
 var islands = [];
 var islands2 = [];
 var islands3 = [];
-var numIslands = 6;
+var numIslands = 1;
 
 //Create a Pixi Application
 let app = new PIXI.Application({antialias: true });
@@ -10,12 +10,36 @@ let app = new PIXI.Application({antialias: true });
 worldContainer.appendChild(app.view);
 const graphics = new PIXI.Graphics();
 
+//Something for cats/creatures to chase
+class RedDot {
+    constructor(vector)
+    {
+        this.x = vector.x;
+        this.y = vector.y;
+    }
+
+    draw() {
+        graphics.lineStyle(2, 0x800000); 
+        graphics.beginFill(0xff0000);
+        graphics.drawCircle(this.x, this.y, 3);
+        graphics.endFill();
+    }
+
+    randomMove (){
+        this.x += Math.random() - 0.5;
+        this.y += Math.random() - 0.5;
+    }
+}
+
+//only cats for now
 class Creature {
-    constructor(x, y){
+    constructor(vector){
         this.cat = PIXI.Sprite.from('/assets/images/Cat.png');
-        this.cat.x = x;
-        this.cat.y = y;
+        this.cat.x = vector.x;
+        this.cat.y = vector.y;
         app.stage.addChild(this.cat);
+        //Basic Feedforward NN
+        this.network = new Architect.Perceptron(2, 5, 2);
     }
 
     draw() {
@@ -27,6 +51,7 @@ class Creature {
     }
 }
 
+//isolated 'ecosystems'
 class Island {
     constructor(minX, minY, size, pop){
         this.minX = minX;
@@ -37,7 +62,9 @@ class Island {
         this.pop = pop; //population
         this.creatures = new Array(pop);
         for (var c = 0; c < pop; c++)
-        this.creatures[c] = new Creature(rand(minX+20, this.maxX-20), rand(minY+20, this.maxY-20));
+            this.creatures[c] = new Creature(new Vector2d(minX, minY)); //(minX+this.maxX)/2 + (minY+this.maxY)/2)
+
+        this.redDot = new RedDot(new Vector2d((minX+this.maxX)/2 + (minY+this.maxY)/2));
     }
 
     draw() {
@@ -60,22 +87,7 @@ class Island {
 }
 
     for (var i=0; i < numIslands; i++)
-        islands.push(new Island(50 + 50 * i * 2.5, 50, 100, 3));
-    for (var i=0; i < numIslands; i++)
-        islands2.push(new Island(50 + 50 * i * 2.5, 200, 100, 3));
-    for (var i=0; i < numIslands; i++)
-        islands3.push(new Island(50 + 50 * i * 2.5, 350, 100, 3));
-
-
-// var island = new Island(50, 50, 100, 5);
-// var island2 = new Island(200, 50, 100, 15);
-// var island3 = new Island(350, 50, 100, 40);
-// island.draw();
-// island2.draw();
-// island3.draw();
-
-
-
+        islands.push(new Island(50 * i * 2.5, 0, 100, 1));
 
 
 app.stage.addChild(graphics);
@@ -87,28 +99,26 @@ function rand(min, max) {
 
 app.ticker.add(delta => worldLoop(delta));
 
+//cat converges on the red dot in the middle of the island
 function worldLoop(delta){
     for (var i=0; i < numIslands; i++){
         islands[i].draw();
         for (var c=0; c < islands[i].creatures.length; c++){
-            islands[i].creatures[c].cat.x += (Math.random()-0.5) * delta;
-            islands[i].creatures[c].cat.y += (Math.random()-0.5) * delta;
-        }
-    }
+            var input = [];
+            input.push(islands[i].creatures[c].cat.x/100);
+            input.push(islands[i].creatures[c].cat.y/100);
 
-    for (var i=0; i < numIslands; i++){
-        islands2[i].draw();
-        for (var c=0; c < islands2[i].creatures.length; c++){
-            islands2[i].creatures[c].cat.x += 3 * (Math.random()-0.5) * delta;
-            islands2[i].creatures[c].cat.y += 3 * (Math.random()-0.5) * delta;
-        }
-    }
+            var output = islands[i].creatures[c].network.activate(input);
 
-    for (var i=0; i < numIslands; i++){
-        islands3[i].draw();
-        for (var c=0; c < islands3[i].creatures.length; c++){
-            islands3[i].creatures[c].cat.x += 5 * (Math.random()-0.5) * delta;
-            islands3[i].creatures[c].cat.y += 5 * (Math.random()-0.5) * delta;
+            console.log(output);
+
+            islands[i].creatures[c].cat.x = output[0] * 100;
+            islands[i].creatures[c].cat.y = output[1] * 100;
+
+            islands[i].creatures[c].network.propagate(0.3,[0.5, 0.5]);
+
+            console.log(islands[i].creatures[c].cat.x + " : " + islands[i].creatures[c].cat.y);
+
         }
     }
   }
