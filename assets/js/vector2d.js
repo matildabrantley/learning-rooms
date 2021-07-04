@@ -38,7 +38,8 @@ class Vector2d {
 
 	//for reversing direction
 	reverse() {
-		return (-this.x, -this.y);
+		this.x = -this.x, 
+		this.y = -this.y;
 	}
 
 	//subtract 2d vectors, returning result

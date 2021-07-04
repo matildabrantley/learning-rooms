@@ -32,20 +32,37 @@ class RedDot {
 
     update () {
         //out of bounds check
-        // if (this.x > this.island.maxX-10)
-        //     this.position.x-=8;
-        // if (this.y > this.island.maxY-10)
-        //     this.y-=8;
-        // if (this.x < this.island.minX+10)
-        //     this.x+=8;
-        // if (this.y < this.island.minY+10)
-        //     this.y+=8;
+        if (this.position.x > this.island.maxX-20){
+            //this.velocity.reverse();
+            this.velocity.x = -this.velocity.x * 0.8;
+            this.position.x -= 10;
+        }
+        if (this.position.y > this.island.maxY-20){
+            //this.velocity.reverse();
+            this.velocity.y = -this.velocity.y * 0.8;
+            this.position.y -= 10;
+        }
+        if (this.position.x < this.island.minX+20){
+            //this.velocity.reverse();
+            this.velocity.x  = -this.velocity.x * 0.8;
+            this.position.x += 10;
+        }
+        if (this.position.y < this.island.minY+20){
+            //this.velocity.reverse();
+            this.velocity.y = -this.velocity.y * 0.8;
+            this.position.y += 10;
+        }
 
         // mouse position
-        this.position.x = mouseX;
-        this.position.y = mouseY;
-        // this.randomMove(0.5);
-        // this.position.add(this.velocity);
+        //this.position.x = mouseX;
+        //this.position.y = mouseY;
+        this.randomMove(0.5);
+        if (frameCount % 100 == 0){
+            this.velocity.set(0,0);
+            this.randomMove(5);
+        }
+
+        this.position.add(this.velocity);
 
 
         this.draw();
@@ -59,14 +76,15 @@ class RedDot {
 
 //only cats for now
 class Creature {
-    constructor(island, vector){
+    constructor(island, vector, learningRate = 0.25){
         this.island = island;
         this.catSprite = PIXI.Sprite.from('/assets/images/Cat.png');
         this.catSprite.x = vector.x;
         this.catSprite.y = vector.y;
         this.position = vector.getCopy();
-        this.velocity = new Vector2d(0, 0, -5, 5);
-        this.accel = new Vector2d(0, 0, -0.2, 0.2);
+        this.velocity = new Vector2d(0, 0, -7, 7);
+        this.accel = new Vector2d(0, 0, -0.5, 0.5);
+        this.learningRate = learningRate;
         app.stage.addChild(this.catSprite);
         //Basic Feedforward NN
         this.network = new Architect.Perceptron(4, 10, 2);
@@ -75,10 +93,11 @@ class Creature {
     draw() {}
 
     update() {
-        //var output = this.network.activate(input);
-        var redDot = this.island.redDot; //get this island's red dot
+        //get this island's size and its red dot
         var islandSize = this.island.size;
-        //normalize positions by island size for NN inputs
+        var redDot = this.island.redDot; 
+        
+        //normalize positions by island size (for NN inputs)
         var input = [(this.position.x / islandSize), (this.position.y / islandSize),
                    (redDot.position.x / islandSize), (redDot.position.y / islandSize)];
 
@@ -94,28 +113,37 @@ class Creature {
         var intendedX = this.position.x > redDot.position.x ? 0 : 1;
         var intendedY = this.position.y > redDot.position.y ? 0 : 1;
         var intendedOutput = [intendedX, intendedY];
-        console.log("Intended Output");
-        console.log(intendedOutput);
 
         //train neural network
-        this.network.propagate(0.25, intendedOutput);
+        //if (frameCount < 1000)
+        this.network.propagate(this.learningRate, intendedOutput);
 
         //add acceleration to velocity
         this.velocity.add(this.accel);
         //add velocity to position
         this.position.add(this.velocity);
-        console.log("Velocity");
-        console.log(this.velocity);
 
         //out of bounds check
-        if (this.position.x > this.maxX-10)
-                this.position.x-=8;
-        if (this.position.y > this.maxY-10)
-                this.position.y-=8;
-        if (this.position.x < this.minX+10)
-                this.position.x+=8;
-        if (this.position.y < this.minY+10)
-                this.position.y+=8;
+        if (this.position.x > this.island.maxX-20){
+            //this.velocity.reverse();
+            this.velocity.x = -this.velocity.x * 0.8;
+            this.position.x -= 10;
+        }
+        if (this.position.y > this.island.maxY-20){
+            //this.velocity.reverse();
+            this.velocity.y = -this.velocity.y * 0.8;
+            this.position.y -= 10;
+        }
+        if (this.position.x < this.island.minX+20){
+            //this.velocity.reverse();
+            this.velocity.x  = -this.velocity.x * 0.8;
+            this.position.x += 10;
+        }
+        if (this.position.y < this.island.minY+20){
+            //this.velocity.reverse();
+            this.velocity.y = -this.velocity.y * 0.8;
+            this.position.y += 10;
+        }
 
         //set sprite x & y to position
         this.catSprite.x = this.position.x;
@@ -179,6 +207,7 @@ function worldLoop(delta){
         }
     }
     frameCount++;
+    $('#controls').text(frameCount);
   }
 
   $("body").mousemove(function(event) {
