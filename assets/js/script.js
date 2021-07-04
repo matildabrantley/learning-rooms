@@ -25,19 +25,21 @@ class RedDot {
         graphics.endFill();
     }
 
-    randomMove (){
-        this.x += Math.random() - 0.5;
-        this.y += Math.random() - 0.5;
+    randomMove (motion=1){
+        this.x += (Math.random() - 0.5) * motion;
+        this.y += (Math.random() - 0.5) * motion;
     }
 }
 
 //only cats for now
 class Creature {
     constructor(vector){
-        this.cat = PIXI.Sprite.from('/assets/images/Cat.png');
-        this.cat.x = vector.x;
-        this.cat.y = vector.y;
-        app.stage.addChild(this.cat);
+        this.catSprite = PIXI.Sprite.from('/assets/images/Cat.png');
+        this.catSprite.x = vector.x;
+        this.catSprite.y = vector.y;
+        this.position = new Vector2d(vector.x,  vector.y);
+        this.velocity = new Vector2d(0, 0);
+        app.stage.addChild(this.catSprite);
         //Basic Feedforward NN
         this.network = new Architect.Perceptron(2, 5, 2);
     }
@@ -48,6 +50,12 @@ class Creature {
         // graphics.beginFill(0x000000, 1);
         // graphics.drawCircle(this.x, this.y, 5);
         // graphics.endFill();
+    }
+
+    update() {
+        //set sprite x & y to position
+        this.catSprite.x = this.position.x;
+        this.catSprite.y = this.position.y;
     }
 }
 
@@ -64,7 +72,7 @@ class Island {
         for (var c = 0; c < pop; c++)
             this.creatures[c] = new Creature(new Vector2d(minX, minY)); //(minX+this.maxX)/2 + (minY+this.maxY)/2)
 
-        this.redDot = new RedDot(new Vector2d((minX+this.maxX)/2 + (minY+this.maxY)/2));
+        this.redDot = new RedDot(new Vector2d((minX+this.maxX)/2, (minY+this.maxY)/2));
     }
 
     draw() {
@@ -73,21 +81,33 @@ class Island {
         graphics.drawRoundedRect(this.minX, this.minY, this.size, this.size, 10);
         graphics.endFill();
 
+        this.redDot.randomMove(4);
+        this.redDot.draw();
+
+        if (this.redDot.x > this.maxX-10)
+            this.redDot.x-=8;
+        if (this.redDot.y > this.maxY-10)
+            this.redDot.y-=8;
+        if (this.redDot.x < this.minX+10)
+            this.redDot.x+=8;
+        if (this.redDot.y < this.minY+10)
+            this.redDot.y+=8;
+
         for (var c = 0; c < this.pop; c++) {
-            if (this.creatures[c].cat.x > this.maxX-10)
-                this.creatures[c].cat.x-=8;
-            if (this.creatures[c].cat.y > this.maxY-10)
-                this.creatures[c].cat.y-=8;
-            if (this.creatures[c].cat.x < this.minX+10)
-                this.creatures[c].cat.x+=8;
-            if (this.creatures[c].cat.y < this.minY+10)
-                this.creatures[c].cat.y+=8;
+            if (this.creatures[c].position.x > this.maxX-10)
+                this.creatures[c].position.x-=8;
+            if (this.creatures[c].position.y > this.maxY-10)
+                this.creatures[c].position.y-=8;
+            if (this.creatures[c].position.x < this.minX+10)
+                this.creatures[c].position.x+=8;
+            if (this.creatures[c].position.y < this.minY+10)
+                this.creatures[c].position.y+=8;
         }
     }
 }
 
-    for (var i=0; i < numIslands; i++)
-        islands.push(new Island(50 * i * 2.5, 0, 100, 1));
+for (var i=0; i < numIslands; i++)
+    islands.push(new Island(50 * i * 2.5, 0, 200, 10));
 
 
 app.stage.addChild(graphics);
@@ -101,24 +121,25 @@ app.ticker.add(delta => worldLoop(delta));
 
 //cat converges on the red dot in the middle of the island
 function worldLoop(delta){
+    //var outputVelocity = new Vector2d(0, 0); //output vector
     for (var i=0; i < numIslands; i++){
+        graphics.clear();
         islands[i].draw();
         for (var c=0; c < islands[i].creatures.length; c++){
-            var input = [];
-            input.push(islands[i].creatures[c].cat.x/100);
-            input.push(islands[i].creatures[c].cat.y/100);
+            var cat = islands[i].creatures[c];
+            console.log("Cat " + cat);
+            var input = [cat.position.x / islands[i].size, cat.position.y / islands[i].size];
+            console.log("Input " + input);
 
-            var output = islands[i].creatures[c].network.activate(input);
+            //in progress: moving over this code to creature update function
 
-            console.log(output);
-
-            islands[i].creatures[c].cat.x = output[0] * 100;
-            islands[i].creatures[c].cat.y = output[1] * 100;
-
-            islands[i].creatures[c].network.propagate(0.3,[0.5, 0.5]);
-
-            console.log(islands[i].creatures[c].cat.x + " : " + islands[i].creatures[c].cat.y);
-
+            //var output = islands[i].creatures[c].network.activate(input);
+            //console.log("Output " + output);
+            //outputVelocity.set(output[0]-0.5, output[1]-0.5);
+            //outputVelocity.multiply(10);
+            //change cat's position
+            //cat.position.add(outputVelocity);
+            //islands[i].creatures[c].network.propagate(0.3 * (c+1)/5,[islands[i].redDot.x / islands[i].size, islands[i].redDot.y / islands[i].size]);
         }
     }
   }

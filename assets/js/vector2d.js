@@ -39,4 +39,24 @@ class Vector2d {
 		this.y -= vector.y;
 		return this;
 	}
+
+	set(x, y) {
+		this.x = x;
+		this.y = y;
+	}
+
+	setAngle(angle)
+	{
+		this.x = Math.cos(angle);
+		this.y = Math.sin(angle);
+		return this;
+	}
+
+	getAngle() {
+		return Math.atan2(this.y, this.x);
+	}
+
+	angleDifference(vector) {
+		return (this.getAngle() - vector.getAngle());
+	}
 }
