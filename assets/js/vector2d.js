@@ -1,5 +1,5 @@
 class Vector2d {
-	constructor(x, y, min = MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER){
+	constructor(x, y, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER){
         this.x = x;
 	    this.y = y;
 		this.min = min;
@@ -19,15 +19,15 @@ class Vector2d {
 
 	//add 2d vectors, returning result
 	add(vector) {
-		this.x = clamp(this.x + vector.x);
-		this.y = clamp(this.y + vector.y);
+		this.x = this.clamp(this.x + vector.x);
+		this.y = this.clamp(this.y + vector.y);
 		return this;
 	}
 
 	//multiply 2d vectors, returning result
 	multiply(scalar) {
-		this.x = clamp(this.x * scalar);
-		this.y = clamp(this.y * scalar);
+		this.x = this.clamp(this.x * scalar);
+		this.y = this.clamp(this.y * scalar);
 		return this;
 	}
 
@@ -43,14 +43,14 @@ class Vector2d {
 
 	//subtract 2d vectors, returning result
 	subtract(vector) {
-		this.x = clamp(this.x - vector.x);
-		this.y = clamp(this.y - vector.y);
+		this.x = this.clamp(this.x - vector.x);
+		this.y = this.clamp(this.y - vector.y);
 		return this;
 	}
 
 	set(x, y) {
-		this.x = clamp(x);
-		this.y = clamp(y);
+		this.x = this.clamp(x);
+		this.y = this.clamp(y);
 	}
 
 	/*setAngle(angle) {

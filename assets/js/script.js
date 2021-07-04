@@ -65,11 +65,11 @@ class Creature {
         this.catSprite.x = vector.x;
         this.catSprite.y = vector.y;
         this.position = vector.getCopy();
-        this.velocity = new Vector2d(0, 0);
-        this.accel = new Vector2d(0, 0, -0.1, 0.1);
+        this.velocity = new Vector2d(0, 0, -5, 5);
+        this.accel = new Vector2d(0, 0, -0.2, 0.2);
         app.stage.addChild(this.catSprite);
         //Basic Feedforward NN
-        this.network = new Architect.Perceptron(4, 100, 2);
+        this.network = new Architect.Perceptron(4, 10, 2);
     }
 
     draw() {}
@@ -86,9 +86,9 @@ class Creature {
         console.log("Output");
         console.log(output);
 
-        //update creature's velocity from output
-        this.velocity.x = output[0] > 0.5 ? output[0] : output[0] - 1;
-        this.velocity.y = output[1] > 0.5 ? output[1] : output[1] - 1;
+        //update creature's acceleration from output
+        this.accel.x = output[0] > 0.5 ? output[0] : output[0] - 1;
+        this.accel.y = output[1] > 0.5 ? output[1] : output[1] - 1;
 
         //find intended output so NN can learn
         var intendedX = this.position.x > redDot.position.x ? 0 : 1;
@@ -100,8 +100,8 @@ class Creature {
         //train neural network
         this.network.propagate(0.25, intendedOutput);
 
-        
-
+        //add acceleration to velocity
+        this.velocity.add(this.accel);
         //add velocity to position
         this.position.add(this.velocity);
         console.log("Velocity");
