@@ -66,6 +66,7 @@ class Creature {
         this.catSprite.y = vector.y;
         this.position = vector.getCopy();
         this.velocity = new Vector2d(0, 0);
+        this.accel = new Vector2d(0, 0, -0.1, 0.1);
         app.stage.addChild(this.catSprite);
         //Basic Feedforward NN
         this.network = new Architect.Perceptron(4, 100, 2);
@@ -152,15 +153,6 @@ for (var i=0; i < numIslands; i++)
     islands.push(new Island(50 * i * 2.5, 0, 500, initialPop));
 
 
-app.stage.addChild(graphics);
-
-//simple random between 2 values
-function rand(min, max) {
-    return (Math.random() * (max - min) + min);
-}
-
-app.ticker.add(delta => worldLoop(delta));
-
 //cat converges on the red dot in the middle of the island
 function worldLoop(delta){
     if (frameCount % fpsReduction === 0) {
@@ -193,3 +185,11 @@ function worldLoop(delta){
     mouseX = event.pageX - $(worldContainer).offset().left;
     mouseY = event.pageY - $(worldContainer).offset().top;
 })
+
+app.ticker.add(delta => worldLoop(delta));
+app.stage.addChild(graphics);
+
+//simple random between 2 values
+function rand(min, max) {
+    return (Math.random() * (max - min) + min);
+}

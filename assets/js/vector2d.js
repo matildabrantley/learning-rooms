@@ -1,12 +1,14 @@
 class Vector2d {
-	constructor(x, y){
+	constructor(x, y, min = MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER){
         this.x = x;
 	    this.y = y;
+		this.min = min;
+		this.max = max;
     }
 
 	//return new instance of this vector
 	getCopy() {
-		var vector = new Vector2d(this.x, this.y);
+		var vector = new Vector2d(this.x, this.y, this.min, this.max);
 		return vector;
 	}
 
@@ -17,15 +19,15 @@ class Vector2d {
 
 	//add 2d vectors, returning result
 	add(vector) {
-		this.x += vector.x;
-		this.y += vector.y;
+		this.x = clamp(this.x + vector.x);
+		this.y = clamp(this.y + vector.y);
 		return this;
 	}
 
 	//multiply 2d vectors, returning result
 	multiply(scalar) {
-		this.x *= scalar;
-		this.y *= scalar;
+		this.x = clamp(this.x * scalar);
+		this.y = clamp(this.y * scalar);
 		return this;
 	}
 
@@ -41,18 +43,17 @@ class Vector2d {
 
 	//subtract 2d vectors, returning result
 	subtract(vector) {
-		this.x -= vector.x;
-		this.y -= vector.y;
+		this.x = clamp(this.x - vector.x);
+		this.y = clamp(this.y - vector.y);
 		return this;
 	}
 
 	set(x, y) {
-		this.x = x;
-		this.y = y;
+		this.x = clamp(x);
+		this.y = clamp(y);
 	}
 
-	setAngle(angle)
-	{
+	/*setAngle(angle) {
 		this.x = Math.cos(angle);
 		this.y = Math.sin(angle);
 		return this;
@@ -64,5 +65,9 @@ class Vector2d {
 
 	angleDifference(vector) {
 		return (this.getAngle() - vector.getAngle());
+	}*/
+
+	clamp (number) {
+		return Math.min(Math.max(number, this.min), this.max);
 	}
 }
