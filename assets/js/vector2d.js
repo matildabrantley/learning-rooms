@@ -4,27 +4,33 @@ class Vector2d {
 	    this.y = y;
     }
 
+	//return new instance of this vector
+	getCopy() {
+		var vector = new Vector2d(this.x, this.y);
+		return vector;
+	}
+
 	//distance between two 2d points using Math.hypot
 	distance(vector) {
 		return Math.hypot(vector.x - this.x, vector.y - this.y)
 	}
 
-	//add 2d vectors
+	//add 2d vectors, returning result
 	add(vector) {
 		this.x += vector.x;
 		this.y += vector.y;
 		return this;
 	}
 
-	//multiply 2d vectors
+	//multiply 2d vectors, returning result
 	multiply(scalar) {
 		this.x *= scalar;
 		this.y *= scalar;
 		return this;
 	}
 
-	//dot product of 2d vectors
-	dotProduct(vector) {
+	//return dot product of 2d vectors
+	getDotProduct(vector) {
 		return (this.x * vector.x) + (this.y * vector.y);
 	}
 
@@ -33,7 +39,7 @@ class Vector2d {
 		return (-this.x, -this.y);
 	}
 
-	//subtract 2d vectors
+	//subtract 2d vectors, returning result
 	subtract(vector) {
 		this.x -= vector.x;
 		this.y -= vector.y;
