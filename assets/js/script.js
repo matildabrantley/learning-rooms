@@ -1,6 +1,6 @@
 var worldContainer = document.getElementById("world");
 var frameCount = 0; //for controlling framerate, e.g. skipping every other frame
-var fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
+var fpsReduction = 60; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
 var islands = [];
 var numIslands = 1;
 var initialPop = 10; //initial island population
@@ -102,6 +102,8 @@ class Creature {
     draw() {}
 
     update() {
+        console.log(this.network);
+
         //get this island's size and its red dot
         var islandSize = this.island.size;
         var redDot = this.island.redDot; 
@@ -160,6 +162,15 @@ class Creature {
         this.catSprite.x = this.position.x;
         this.catSprite.y = this.position.y;
     }
+
+    mutate(rate, scale = 0.1) {
+        var net = this.network;
+        for (var i = 0; i < net.layers.input.list.length; i++)
+            for (var j = 0; j < net.layers.input.list[i].connections.length; j++)
+                for (var k = 0; k < net.layers.input.list[i].connections[j].projected.length; k++)
+                    if (rate > Math.random())
+                        net.layers.input.list[i].connections[j].projected[k].weight += (Math.random()-0.5) * scale;
+    }
 }
 
 //isolated 'ecosystems'
@@ -173,7 +184,6 @@ class Island {
 
         this.pop = pop; //population
         this.creatures = new Array(pop);
-        this.popFitness = new Array(pop); //array of indices for sorting by fitness
         for (var c = 0; c < pop; c++)
             this.creatures[c] = new Creature(this, new Vector2d((minX+this.maxX)/2, (minY+this.maxY)/2)); //start in middle of island
 
@@ -182,10 +192,9 @@ class Island {
 
     update() {
         this.redDot.update();
-        for (var c=0; c < this.creatures.length; c++) {
+        for (var c=0; c < this.pop; c++) 
             this.creatures[c].update();
-            this.popFitness[c] = this.creatures[c].fitness;
-        }
+
         this.draw();
         this.genetics();
     }
@@ -199,19 +208,13 @@ class Island {
 
     genetics() {
         //fitness sorting
-        this.popFitness.sort((a, b) => (a.fitness > b.fitness) ? 1 : -1);
+        this.creatures.sort((a, b) => (a.fitness > b.fitness) ? 1 : -1);
+        
+        //the better the fitness, the lower the mutation rate
+        for (var c=0; c < this.pop; c++)
+            this.creatures[c].mutate((c+1) / this.pop);
 
-
-
-
-        // var tempPopFitness = popFitness.splice(); 
-        // for (var i=0; i<populace.length; i++) 
-        // {
-        // for (var j=0; j<populace.length; j++)
-        //     if ((tempPopFitness[j] > (tempPopFitness[fittestNet[i]])
-        //             fittestNet[i] = j;
-        //     tempPopFitness[fittestNet[i]] = -10;
-        // }
+        this.pop = this.creatures.length;
     }
 
 }
