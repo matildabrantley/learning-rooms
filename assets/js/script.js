@@ -3,11 +3,11 @@ var frameCount = 0; //for controlling framerate, e.g. skipping every other frame
 var fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
 var islands = [];
 var numIslands = 1;
-var initialPop = 100; //initial island population
+var initialPop = 5; //initial island population
 var islandNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 var mouseX = 0, mouseY = 0;
-var learningPeriod = 1500; //number of frames that backpropagation occurs
+var learningPeriod = 3000; //number of frames that backpropagation occurs
 
 //Create a Pixi Application
 let app = new PIXI.Application({antialias: true });
@@ -21,7 +21,7 @@ class RedDot {
     {
         this.island = island;
         this.position = vector;
-        this.velocity = new Vector2d(0,0, 10, 10);
+        this.velocity = new Vector2d(0, 0, -20, 20);
     }
 
     draw() {
@@ -57,16 +57,16 @@ class RedDot {
         // mouse position
         //this.position.x = mouseX;
         //this.position.y = mouseY;
-        //if (frameCount < learningPeriod)
+        // if (frameCount < learningPeriod)
         //    this.randomTeleport();
-        //else {
+        // else {
             this.randomMove(0.5);
-            if (frameCount % 100 == 0){
-                this.velocity.set(0,0);
-                this.randomMove(5);
-            }
+             if (frameCount % 1000 == 0){
+                 this.velocity.set(0,0);
+                 this.randomMove(0.1);
+             }
             this.position.add(this.velocity);
-       // }
+        //}
 
         this.draw();
     }
@@ -90,19 +90,19 @@ class Creature {
         this.catSprite.x = vector.x;
         this.catSprite.y = vector.y;
         this.position = vector.getCopy();
-        this.velocity = new Vector2d(0, 0, -7, 7);
+        this.velocity = new Vector2d(0, 0, -27, 27);
         this.accel = new Vector2d(0, 0, -0.5, 0.5);
         this.learningRate = learningRate;
         this.fitness = 0;
         app.stage.addChild(this.catSprite);
         //Basic Feedforward NN
-        this.network = new Architect.Perceptron(2, 5, 2);
+        this.network = new Architect.Perceptron(2, 10, 2);
     }
 
     draw() {}
 
     update() {
-        console.log(this.network);
+        //console.log(this.network);
 
         //get this island's size and its red dot
         var islandSize = this.island.size;
@@ -115,26 +115,30 @@ class Creature {
         // console.log("Output");
         // console.log(output);
 
-        this.position.x = output[0] * islandSize;
-        this.position.y = output[1] * islandSize;
+        //this.position.x = output[0] * islandSize;
+        //this.position.y = output[1] * islandSize;
 
+        //the vector to be changed by output, such as accel or velocity
+        var changing = this.velocity; 
         //update creature's acceleration from output
-        //this.accel.x = output[0] > 0.5 ? output[0] : output[0] - 1;
-        //this.accel.y = output[1] > 0.5 ? output[1] : output[1] - 1;
+        changing.x = (output[0] * 2 * changing.max) - changing.max;
+        changing.y = (output[1] * 2 * changing.max) - changing.max 
 
-        // //find intended output so NN can learn
-        // var intendedX = this.position.x > redDot.position.x ? 0 : 1;
-        // var intendedY = this.position.y > redDot.position.y ? 0 : 1;
-        // var intendedOutput = [intendedX, intendedY];
+
+        // find intended output so NN can learn
+        // arrange position data for NN, for example: (-1 to 0) -> (0 -> 2) -> (0 -> 1)
+        var intendedX = (((redDot.position.x - this.position.x) / islandSize) + 1) / 2;
+        var intendedY = (((redDot.position.y - this.position.y) / islandSize) + 1) / 2;
+        var intendedOutput = [intendedX, intendedY];
 
         //train neural network
-        // if (frameCount < learningPeriod)
-        //     this.network.propagate(this.learningRate, [(redDot.position.x / islandSize), (redDot.position.y / islandSize)]);
+        if (frameCount < learningPeriod)
+            this.network.propagate(this.learningRate, intendedOutput);
 
         //add acceleration to velocity
-        //this.velocity.add(this.accel);
+        this.velocity.add(this.accel);
         //add velocity to position
-        //this.position.add(this.velocity);
+        this.position.add(this.velocity);
 
         //out of bounds check
         if (this.position.x > this.island.maxX-20){
@@ -163,8 +167,9 @@ class Creature {
         this.catSprite.y = this.position.y;
 
         //reward
-        var distance = this.position.distance(redDot.position);
-        this.fitness += 1 / (distance+1);
+        //var distance = this.position.distance(redDot.position);
+        //this.fitness += 1 / (distance+1);
+        this.fitness += this.position.x + this.position.y;
     }
 
     mutate(rate, scale = 0.1) {
@@ -172,14 +177,14 @@ class Creature {
         //mutate weights from input
         for (var j = 0; j < net.layers.input.list.length; j++)
             for (var k = 0; k < net.layers.input.list[j].connections.projected.length; j++)
-                if (rate > Math.random())
+                //if (rate < Math.random())
                     net.layers.input.list[j].connections.projected[k].weight += (Math.random()-0.5) * scale;
         //mutate weights from hidden layers       
         for (var i = 0; i < net.layers.hidden.length; i++)
-            for (var j = 0; j < net.layers.input.list.length; j++)
-                for (var k = 0; k < net.layers.input.list[j].connections.projected.length; j++)
-                    if (rate > Math.random())
-                        net.layers.input.list[j].connections.projected[k].weight += (Math.random()-0.5) * scale;
+            for (var j = 0; j < net.layers.hidden[i].list.length; j++)
+                for (var k = 0; k < net.layers.hidden[i].list[j].connections.projected.length; j++)
+                    //if (rate < Math.random())
+                        net.layers.hidden[i].list[j].connections.projected[k].weight += (Math.random()-0.5) * scale;
     }
 }
 
@@ -206,7 +211,7 @@ class Island {
             this.creatures[c].update();
 
         this.draw();
-        this.genetics();
+        //this.genetics();
     }
 
     draw() {

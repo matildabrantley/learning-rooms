@@ -8,8 +8,8 @@ class Vector2d {
 
 	//return new instance of this vector
 	getCopy() {
-		var vector = new Vector2d(this.x, this.y, this.min, this.max);
-		return vector;
+		var newInstance = new Vector2d(this.x, this.y, this.min, this.max);
+		return newInstance;
 	}
 
 	//distance between two 2d points using Math.hypot
