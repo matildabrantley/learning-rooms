@@ -7,7 +7,7 @@ var initialPop = 5; //initial island population
 var islandNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 var mouseX = 0, mouseY = 0;
-var learningPeriod = 3000; //number of frames that backpropagation occurs
+var learningPeriod = 1000; //number of frames that backpropagation occurs
 
 //Create a Pixi Application
 let app = new PIXI.Application({antialias: true });
@@ -57,16 +57,16 @@ class RedDot {
         // mouse position
         //this.position.x = mouseX;
         //this.position.y = mouseY;
-        // if (frameCount < learningPeriod)
-        //    this.randomTeleport();
-        // else {
+        if (frameCount < learningPeriod)
+           this.randomTeleport();
+        else {
             this.randomMove(0.5);
-             if (frameCount % 1000 == 0){
+             if (frameCount % 100 == 0){
                  this.velocity.set(0,0);
-                 this.randomMove(0.1);
+                 this.randomMove();
              }
             this.position.add(this.velocity);
-        //}
+        }
 
         this.draw();
     }
@@ -74,6 +74,11 @@ class RedDot {
     randomMove (motion=1){
         this.velocity.x += (Math.random() - 0.5) * motion;
         this.velocity.y += (Math.random() - 0.5) * motion;
+    }
+
+    randomVibrate (motion=1){
+        this.velocity.x = (Math.random() - 0.5) * motion;
+        this.velocity.y = (Math.random() - 0.5) * motion;
     }
 
     randomTeleport () {
@@ -90,7 +95,7 @@ class Creature {
         this.catSprite.x = vector.x;
         this.catSprite.y = vector.y;
         this.position = vector.getCopy();
-        this.velocity = new Vector2d(0, 0, -27, 27);
+        this.velocity = new Vector2d(0, 0, -5, 5);
         this.accel = new Vector2d(0, 0, -0.5, 0.5);
         this.learningRate = learningRate;
         this.fitness = 0;
@@ -112,18 +117,12 @@ class Creature {
         var input = [(redDot.position.x / islandSize), (redDot.position.y / islandSize)];
                    //(this.position.x / islandSize), (redDot.position.y / islandSize)];
         var output = this.network.activate(input);
-        // console.log("Output");
-        // console.log(output);
 
-        //this.position.x = output[0] * islandSize;
-        //this.position.y = output[1] * islandSize;
-
-        //the vector to be changed by output, such as accel or velocity
-        var changing = this.velocity; 
+        //the vector to be changed by output, such as velocity or accel
+        var changing = this.accel; 
         //update creature's acceleration from output
         changing.x = (output[0] * 2 * changing.max) - changing.max;
         changing.y = (output[1] * 2 * changing.max) - changing.max 
-
 
         // find intended output so NN can learn
         // arrange position data for NN, for example: (-1 to 0) -> (0 -> 2) -> (0 -> 1)
@@ -200,7 +199,8 @@ class Island {
         this.pop = pop; //population
         this.creatures = new Array(pop);
         for (var c = 0; c < pop; c++)
-            this.creatures[c] = new Creature(this, new Vector2d((minX+this.maxX)/2, (minY+this.maxY)/2)); //start in middle of island
+            this.creatures[c] = new Creature(this, new Vector2d(rand(minX,size), rand(minY,size))); //random positions
+            //((minX+this.maxX)/2, (minY+this.maxY)/2)); //start in middle of island
 
         this.redDot = new RedDot(this, new Vector2d((minX+this.maxX)/2, (minY+this.maxY)/2));
     }
