@@ -1,9 +1,9 @@
 var worldContainer = document.getElementById("world");
 var frameCount = 0; //for controlling framerate, e.g. skipping every other frame
-var fpsReduction = 60; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
+var fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
 var islands = [];
 var numIslands = 1;
-var initialPop = 10; //initial island population
+var initialPop = 100; //initial island population
 var islandNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 var mouseX = 0, mouseY = 0;
@@ -57,16 +57,16 @@ class RedDot {
         // mouse position
         //this.position.x = mouseX;
         //this.position.y = mouseY;
-        if (frameCount < learningPeriod)
-            this.randomTeleport();
-        else {
+        //if (frameCount < learningPeriod)
+        //    this.randomTeleport();
+        //else {
             this.randomMove(0.5);
             if (frameCount % 100 == 0){
                 this.velocity.set(0,0);
                 this.randomMove(5);
             }
             this.position.add(this.velocity);
-        }
+       // }
 
         this.draw();
     }
@@ -96,7 +96,7 @@ class Creature {
         this.fitness = 0;
         app.stage.addChild(this.catSprite);
         //Basic Feedforward NN
-        this.network = new Architect.Perceptron(2, 100, 2);
+        this.network = new Architect.Perceptron(2, 5, 2);
     }
 
     draw() {}
@@ -110,6 +110,7 @@ class Creature {
         
         //normalize positions by island size (for NN inputs)
         var input = [(redDot.position.x / islandSize), (redDot.position.y / islandSize)];
+                   //(this.position.x / islandSize), (redDot.position.y / islandSize)];
         var output = this.network.activate(input);
         // console.log("Output");
         // console.log(output);
@@ -117,10 +118,9 @@ class Creature {
         this.position.x = output[0] * islandSize;
         this.position.y = output[1] * islandSize;
 
-
-        // //update creature's acceleration from output
-        // this.accel.x = output[0] > 0.5 ? output[0] : output[0] - 1;
-        // this.accel.y = output[1] > 0.5 ? output[1] : output[1] - 1;
+        //update creature's acceleration from output
+        //this.accel.x = output[0] > 0.5 ? output[0] : output[0] - 1;
+        //this.accel.y = output[1] > 0.5 ? output[1] : output[1] - 1;
 
         // //find intended output so NN can learn
         // var intendedX = this.position.x > redDot.position.x ? 0 : 1;
@@ -128,13 +128,13 @@ class Creature {
         // var intendedOutput = [intendedX, intendedY];
 
         //train neural network
-        if (frameCount < learningPeriod)
-            this.network.propagate(this.learningRate, [(redDot.position.x / islandSize), (redDot.position.y / islandSize)]);
+        // if (frameCount < learningPeriod)
+        //     this.network.propagate(this.learningRate, [(redDot.position.x / islandSize), (redDot.position.y / islandSize)]);
 
         //add acceleration to velocity
-        // this.velocity.add(this.accel);
-        // //add velocity to position
-        // this.position.add(this.velocity);
+        //this.velocity.add(this.accel);
+        //add velocity to position
+        //this.position.add(this.velocity);
 
         //out of bounds check
         if (this.position.x > this.island.maxX-20){
@@ -161,15 +161,25 @@ class Creature {
         //set sprite x & y to position
         this.catSprite.x = this.position.x;
         this.catSprite.y = this.position.y;
+
+        //reward
+        var distance = this.position.distance(redDot.position);
+        this.fitness += 1 / (distance+1);
     }
 
     mutate(rate, scale = 0.1) {
         var net = this.network;
-        for (var i = 0; i < net.layers.input.list.length; i++)
-            for (var j = 0; j < net.layers.input.list[i].connections.length; j++)
-                for (var k = 0; k < net.layers.input.list[i].connections[j].projected.length; k++)
+        //mutate weights from input
+        for (var j = 0; j < net.layers.input.list.length; j++)
+            for (var k = 0; k < net.layers.input.list[j].connections.projected.length; j++)
+                if (rate > Math.random())
+                    net.layers.input.list[j].connections.projected[k].weight += (Math.random()-0.5) * scale;
+        //mutate weights from hidden layers       
+        for (var i = 0; i < net.layers.hidden.length; i++)
+            for (var j = 0; j < net.layers.input.list.length; j++)
+                for (var k = 0; k < net.layers.input.list[j].connections.projected.length; j++)
                     if (rate > Math.random())
-                        net.layers.input.list[i].connections[j].projected[k].weight += (Math.random()-0.5) * scale;
+                        net.layers.input.list[j].connections.projected[k].weight += (Math.random()-0.5) * scale;
     }
 }
 
