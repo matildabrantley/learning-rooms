@@ -25,3 +25,6 @@ Summary - Train virtual creatures to optimize their survival using Synaptic.js a
     * Sprite sheets.
     * Filters tied to various conditions in rooms
     * More effects for events in rooms, such as cat collision with laser or with each other.
+
+## Screenshot
+![Screenshot](assets/images/LearningRooms.jpg)
