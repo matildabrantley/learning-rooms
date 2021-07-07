@@ -11,7 +11,7 @@
     integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     
     <link rel="stylesheet" href="./assets/css/style.css" />
-    <title>Synaptic Ecosystem</title>
+    <title>Learning Rooms</title>
 </head>
 <body>
 
@@ -21,9 +21,11 @@
         </header>
       
         <nav id="controls">
-            <h3>Controls</h3>
+            <h3><b>Controls</b></h3><br>
+            <h4>Laser Pointer</h4>
+            <p>Laser Speed</p>
+            <input type="range" class="form-range" id="laser-speed" min="0.1" max="8" value="1"><br>
             <div class="form-check">
-                <h4>Laser Pointer</h4>
                 <input class="form-check-input" type="radio" name="laser-radios" id="random-motion" value="option1" checked>
                 <label class="form-check-label" for="radios1">
                   Random motion 
@@ -32,7 +34,7 @@
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="laser-radios" id="random-jumping" value="option2">
                 <label class="form-check-label" for="radios2">
-                  Random jumping
+                  Random jumping (training)
                 </label>
             </div>
             <div class="form-check">
@@ -40,13 +42,19 @@
                 <label class="form-check-label" for="radios3">
                   User controlled
                 </label>
-                <br><br>
             </div>
+            <br><br>
             
+            <div class="form-check">
+                    <input class="form-check-input" type="checkbox" checked="true" value="true" id="learning-checkbox">
+                    <label class="form-check-label" for="defaultCheck1">Active Learning</label>
+            </div>
+
+            <h4>Room Learning Rates</h4>
             <div id="range-container-proto">
-                <h4>Learning Rate</h4>
-                <p>Room 1</p>
-                <input type="range" class="form-range" id="learning-range-proto">
+                <p>Room A Learning Rate</p>
+                <input type="range" class="form-range" id="learning-range-proto" min="0" max="1" step="0.01">
+                <br>
             </div>
         </nav>
       

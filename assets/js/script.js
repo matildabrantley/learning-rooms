@@ -3,7 +3,7 @@ var frameCount = 0; //for controlling framerate, e.g. skipping every other frame
 var fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
 var rooms = [];
 var numRooms = 6;
-var initialPop = 30; //initial room population
+var initialPop = 10; //initial room population
 var roomNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
 var roomFloors = ['/assets/images/carpet2.jpg', '/assets/images/carpet1.jpg'];
@@ -11,7 +11,7 @@ var rangeContainerPrototype = $('#range-container-proto');
 var roomSize = 200;
 var mouseX = 0, mouseY = 0;
 var learningPeriod = 200; //number of frames that backpropagation occurs
-var generationLength = 10; //frequency of fitness sorting and genetic changes
+var generationLength = 1000; //frequency of fitness sorting and genetic changes
 var laserControl = "option1";
 
 //Create a Pixi Application
@@ -32,7 +32,7 @@ class RedDot {
     draw() {
         graphics.lineStyle(2, 0xffa000); 
         graphics.beginFill(0xff0000);
-        graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 5);
+        graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 4);
         graphics.endFill();
     }
 
@@ -56,10 +56,12 @@ class RedDot {
             this.position.y += 10;
         }
 
+
         var laserRadios = document.getElementsByName('laser-radios');
         for(let i = 0; i < laserRadios.length; i++) {
             if (i == 0 && laserRadios[i].checked) {
-                this.randomMove(0.5);
+                let speed = $('#laser-speed').val();
+                this.randomMove(speed);
                 if (frameCount % 100 == 0){
                     this.velocity.set(0,0);
                     this.randomMove();
@@ -69,8 +71,8 @@ class RedDot {
             if (i == 1 && laserRadios[i].checked)
                 this.randomTeleport();
             if (i == 2 && laserRadios[i].checked) {
-                this.position.x = mouseX;
-                this.position.y = mouseY;
+                this.position.x = mouseX-50;
+                this.position.y = mouseY-50;
             }
             
         }
@@ -100,25 +102,25 @@ class Creature {
         this.room = room;
         //sprite
         this.sprite = PIXI.Sprite.from('/assets/images/Cat.png');
+        this.sprite.anchor.set(0.5);
         this.sprite.x = vector.x;
         this.sprite.y = vector.y;
-        this.sprite.width = 20;
-        this.sprite.height = 20;
+        this.sprite.width = 30;
+        this.sprite.height = 30;
         app.stage.addChild(this.sprite);
 
         this.position = vector.getCopy();
-        this.velocity = new Vector2d(0, 0, -10, 10);
-        this.accel = new Vector2d(0, 0, -1, 1);
+        this.velocity = new Vector2d(0, 0, -3, 3);
+        this.accel = new Vector2d(0, 0, -0.1, 0.1);
         this.learningRate = learningRate;
         this.fitness = 0;
         //Basic Feedforward NN
-        this.network = new Architect.Perceptron(2, 5, 2);
+        this.network = new Architect.Perceptron(2, 5, 5, 2);
     }
 
     draw() {
         graphics.lineStyle(1, 0xffffff); 
-        graphics.beginFill(0xffffff);
-        graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 3);
+        graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 1);
         graphics.endFill();
     }
 
@@ -130,12 +132,12 @@ class Creature {
         var redDot = this.room.redDot; 
         
         //normalize positions by room size (for NN inputs)
-        var input = [(this.position.x / roomSize), (this.position.y / roomSize)]; //, (redDot.position.y / roomSize)
+        var input = [(redDot.position.x / roomSize), (redDot.position.y / roomSize)];
                    //(this.position.x / roomSize), (redDot.position.y / roomSize)];
         var output = this.network.activate(input);
 
         //the vector to be changed by output, such as velocity or accel
-        var changing = this.velocity; 
+        var changing = this.accel; 
 
         //update creature's acceleration from output
         changing.x = output[0] > 0.5 ? output[0] : output[0] - 1;
@@ -153,7 +155,7 @@ class Creature {
         this.learningRate = this.room.learningRate;
         //train neural network
         //if (frameCount < learningPeriod)
-        if (true)
+        if ($('#learning-checkbox:checked').val())
             this.network.propagate(this.learningRate, intendedOutput);
 
         //add acceleration to velocity
@@ -181,8 +183,8 @@ class Creature {
         }
 
         //set sprite x & y to position
-        this.sprite.x = this.position.x + this.originX;
-        this.sprite.y = this.position.y + this.originY;
+        this.sprite.x = this.position.x + this.room.originX;
+        this.sprite.y = this.position.y + this.room.originY;
         this.draw();
 
         //reward
@@ -194,45 +196,34 @@ class Creature {
     mutate(rate, scale = 2) {
         var net = this.network;
         //mutate weights from input
-        // for (var j in net.layers.input.list){
-        //     for (var k in net.layers.input.list[j].connections.projected) {
-        //         if (rate > Math.random()) {
-        //             net.layers.input.list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
-        //             net.layers.input.list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
-        //         }
-        //     }
-        // }
+        for (var j in net.layers.input.list){
+            for (var k in net.layers.input.list[j].connections.projected) {
+                if (rate > Math.random()) {
+                    net.layers.input.list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
+                    net.layers.input.list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
+                }
+            }
+        }
         
-        // //mutate weights from hidden layers       
-        // for (var i = 0; i < net.layers.hidden.length; i++){
-        //     for (var j in net.layers.hidden[i].list){
-        //         for (var k in net.layers.hidden[i].list[j].connections.projected){
-        //             if (rate > Math.random()){
-        //                 var w1 = net.layers.hidden[i].list[j].connections.projected[k].weight;
-        //                 net.layers.hidden[i].list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
-        //                 net.layers.hidden[i].list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
-        //                 var w2 = net.layers.hidden[i].list[j].connections.projected[k].weight;
-        //                 var hey= 0;
-        //             }
-        //         }
-        //     }
-        // }
-        if (rate > Math.random())
-            net.layers.input = new Layer(net.layers.input.length);
-        if (rate > Math.random())
-            for (var i in net.layers.hidden)
-                net.layers.hidden[i] = new Layer(net.layers.hidden[i].length);
-
+        //mutate weights from hidden layers       
+        for (var i = 0; i < net.layers.hidden.length; i++){
+            for (var j in net.layers.hidden[i].list){
+                for (var k in net.layers.hidden[i].list[j].connections.projected){
+                    if (rate > Math.random()){
+                        net.layers.hidden[i].list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
+                        net.layers.hidden[i].list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
+                    }
+                }
+            }
+        }
     }
 
-    replace() {
-
-    }
+    replace() {}
 }
 
 //isolated 'ecosystems'
 class Room {
-    constructor(name, floor, originX, originY, size, pop){
+    constructor(name, floor, rangeSlider, originX, originY, size, pop){
 
         //floor image
         this.floor = PIXI.Sprite.from(floor);
@@ -243,7 +234,7 @@ class Room {
         app.stage.addChild(this.floor);
 
         //range slider in controls
-        this.rangeSlider = rangeContainerPrototype.clone();
+        this.rangeSlider = rangeSlider;
 
         this.originX = originX;
         this.originY = originY;
@@ -254,13 +245,13 @@ class Room {
         this.pop = pop; //population
         this.creatures = new Array(pop);
         for (var c = 0; c < pop; c++)
-            this.creatures[c] = new Creature(this, new Vector2d((size)/2, (size)/2)); //random positions
+            this.creatures[c] = new Creature(this, new Vector2d(rand(0, size), rand(0, size))); //random positions
 
         this.redDot = new RedDot(this, new Vector2d((size)/2, (size)/2));
     }
 
     update() {
-        this.learningRate = document.querySelector('#learning-range-proto').value;
+        this.learningRate = this.rangeSlider.val();
 
         this.redDot.update();
         for (var c=0; c < this.pop; c++) 
@@ -279,9 +270,9 @@ class Room {
         graphics.endFill();
     }
 
-    //TODO: Fix genetic algorithm
+    //TODO: Debug genetic algorithm
     genetics() {
-        //fitness sorting
+        //fitness sorting, more fit creatures move to front
         this.creatures.sort((b, a) => (a.fitness > b.fitness) ? 1 : -1);
         
         //the better the fitness, the lower the mutation rate
@@ -319,20 +310,30 @@ function rand(min, max) {
 
 function start() {
     //create rooms
-    var margin = 1.5;
+    var margin = 1.3;
     for (var i=0, col=0, row=0; i < numRooms; i++) {
         var originX = roomSize * col * margin;
         var originY = roomSize * row * margin;
-        rooms.push(new Room(roomNames[i], roomFloors[i % roomFloors.length], originX, originY, roomSize, initialPop));
+
+        var rangeContainer = rangeContainerPrototype.clone();
+        rangeContainer.attr("id", "learning-rate" + roomNames[i]);
+        rangeContainer.children().eq(0).text("Room " + roomNames[i] + " Learning Rate")
+        rangeContainer.appendTo('#controls');
+        var rangeSlider = rangeContainer.children().eq(1);
+        rangeSlider.attr("value", (i+0.1)/6)
+        console.log(rangeContainer.children().eq(1));
+        rooms.push(new Room(roomNames[i], roomFloors[i % roomFloors.length], rangeContainer.children().eq(1), originX+50, originY+50, roomSize, initialPop));
         col++;
-        if (originX > 500) {
+        if (originX > 400) {
             col = 0;
             row++;
         }
     }
+    rangeContainerPrototype.remove();
     //send worldLoop to Pixi ticker
-    app.ticker.add(delta => worldLoop(delta));
-    app.stage.addChild(graphics);
 }
 
 start();
+
+app.ticker.add(delta => worldLoop(delta));
+app.stage.addChild(graphics);
