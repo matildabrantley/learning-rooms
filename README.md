@@ -5,7 +5,7 @@ Summary - Train virtual creatures to optimize their survival using Synaptic.js a
 ### [Live GitHub Page](https://matildabrantley.github.io/learning-rooms/)
 ## Features
 * Three types of laser pointer motion:
-    * Random Motion: Simulates a person controlling the laser pointer. Speed can be adjusted. Uses velocity vector. Reound off sides.
+    * Random Motion: Simulates a person controlling the laser pointer. Speed can be adjusted. Uses velocity vector. Rebounds off sides.
     * Random Jumping: For training networks to prevent local overfitting.
     * User Controlled: For testing the results of training. Or just having fun.
 * Six rooms with independent learning rates.
@@ -13,7 +13,7 @@ Summary - Train virtual creatures to optimize their survival using Synaptic.js a
 * Synaptic.js used for neural networks. 
     * Simple 2-5-5-2 Perceptrons for Network Architecture for now. 
 * Pixi.js used for graphics (not much for now). 
-* Creatures (cats) have velocity and acceleration vectors. Reound off sides.
+* Creatures (cats) have velocity and acceleration vectors. Rebounds off sides.
 * Vector2d Class with many methods for controlling simulated 2d motion (distance, add, multiply, dot product, reverse, clamp to limit min/max values, angles).
    
 ## Features Under Work
