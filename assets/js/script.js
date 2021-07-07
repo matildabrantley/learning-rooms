@@ -2,15 +2,17 @@ var worldContainer = $(document.getElementById("world"));
 var frameCount = 0; //for controlling framerate, e.g. skipping every other frame
 var fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
 var rooms = [];
-var numRooms = 1;
-var initialPop = 20; //initial room population
+var numRooms = 6;
+var initialPop = 30; //initial room population
 var roomNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-var roomFloors = ['/assets/images/carpet1.jpg', '/assets/images/carpet2.jpg'];
-var roomSize = 500;
+var roomFloors = ['/assets/images/carpet2.jpg', '/assets/images/carpet1.jpg'];
+var rangeContainerPrototype = $('#range-container-proto');
+var roomSize = 200;
 var mouseX = 0, mouseY = 0;
 var learningPeriod = 200; //number of frames that backpropagation occurs
 var generationLength = 10; //frequency of fitness sorting and genetic changes
+var laserControl = "option1";
 
 //Create a Pixi Application
 let app = new PIXI.Application({antialias: true });
@@ -28,9 +30,9 @@ class RedDot {
     }
 
     draw() {
-        graphics.lineStyle(2, 0xff0000); 
+        graphics.lineStyle(2, 0xffa000); 
         graphics.beginFill(0xff0000);
-        graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 3);
+        graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 5);
         graphics.endFill();
     }
 
@@ -54,19 +56,24 @@ class RedDot {
             this.position.y += 10;
         }
 
-        // mouse position
-        // this.position.x = mouseX;
-        // this.position.y = mouseY;
-        // if (frameCount < learningPeriod)
-        //    this.randomTeleport();
-        // else {
-            // this.randomMove(0.5);
-            //  if (frameCount % 100 == 0){
-            //      this.velocity.set(0,0);
-            //      this.randomMove();
-            //  }
-            // this.position.add(this.velocity);
-        // }
+        var laserRadios = document.getElementsByName('laser-radios');
+        for(let i = 0; i < laserRadios.length; i++) {
+            if (i == 0 && laserRadios[i].checked) {
+                this.randomMove(0.5);
+                if (frameCount % 100 == 0){
+                    this.velocity.set(0,0);
+                    this.randomMove();
+                }
+                this.position.add(this.velocity);
+            }
+            if (i == 1 && laserRadios[i].checked)
+                this.randomTeleport();
+            if (i == 2 && laserRadios[i].checked) {
+                this.position.x = mouseX;
+                this.position.y = mouseY;
+            }
+            
+        }
 
         this.draw();
     }
@@ -143,9 +150,11 @@ class Creature {
         //console.log("intendedOutput");
         //console.log(intendedOutput);
 
+        this.learningRate = this.room.learningRate;
         //train neural network
         //if (frameCount < learningPeriod)
-        //    this.network.propagate(this.learningRate, intendedOutput);
+        if (true)
+            this.network.propagate(this.learningRate, intendedOutput);
 
         //add acceleration to velocity
         this.velocity.add(this.accel);
@@ -177,37 +186,43 @@ class Creature {
         this.draw();
 
         //reward
-        var distance = this.position.distance(redDot.position);
-        this.fitness += 1 / (distance+1);
-        //this.fitness += this.position.x + this.position.y;
+        //var distance = this.position.distance(redDot.position);
+        //this.fitness += 1 / (distance+1);
+        this.fitness += this.position.x + this.position.y;
     }
 
     mutate(rate, scale = 2) {
         var net = this.network;
         //mutate weights from input
-        for (var j in net.layers.input.list){
-            for (var k in net.layers.input.list[j].connections.projected) {
-                if (rate > Math.random()) {
-                    net.layers.input.list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
-                    net.layers.input.list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
-                }
-            }
-        }
+        // for (var j in net.layers.input.list){
+        //     for (var k in net.layers.input.list[j].connections.projected) {
+        //         if (rate > Math.random()) {
+        //             net.layers.input.list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
+        //             net.layers.input.list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
+        //         }
+        //     }
+        // }
         
-        //mutate weights from hidden layers       
-        for (var i = 0; i < net.layers.hidden.length; i++){
-            for (var j in net.layers.hidden[i].list){
-                for (var k in net.layers.hidden[i].list[j].connections.projected){
-                    if (rate > Math.random()){
-                        var w1 = net.layers.hidden[i].list[j].connections.projected[k].weight;
-                        net.layers.hidden[i].list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
-                        net.layers.hidden[i].list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
-                        var w2 = net.layers.hidden[i].list[j].connections.projected[k].weight;
-                        var hey= 0;
-                    }
-                }
-            }
-        }
+        // //mutate weights from hidden layers       
+        // for (var i = 0; i < net.layers.hidden.length; i++){
+        //     for (var j in net.layers.hidden[i].list){
+        //         for (var k in net.layers.hidden[i].list[j].connections.projected){
+        //             if (rate > Math.random()){
+        //                 var w1 = net.layers.hidden[i].list[j].connections.projected[k].weight;
+        //                 net.layers.hidden[i].list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
+        //                 net.layers.hidden[i].list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
+        //                 var w2 = net.layers.hidden[i].list[j].connections.projected[k].weight;
+        //                 var hey= 0;
+        //             }
+        //         }
+        //     }
+        // }
+        if (rate > Math.random())
+            net.layers.input = new Layer(net.layers.input.length);
+        if (rate > Math.random())
+            for (var i in net.layers.hidden)
+                net.layers.hidden[i] = new Layer(net.layers.hidden[i].length);
+
     }
 
     replace() {
@@ -225,7 +240,10 @@ class Room {
         this.floor.height = size;
         this.floor.x = originX;
         this.floor.y = originY;
-        //app.stage.addChild(this.floor);
+        app.stage.addChild(this.floor);
+
+        //range slider in controls
+        this.rangeSlider = rangeContainerPrototype.clone();
 
         this.originX = originX;
         this.originY = originY;
@@ -242,13 +260,16 @@ class Room {
     }
 
     update() {
+        this.learningRate = document.querySelector('#learning-range-proto').value;
+
         this.redDot.update();
         for (var c=0; c < this.pop; c++) 
             this.creatures[c].update();
 
         this.draw();
-        if (frameCount % generationLength == 0)
-            this.genetics();
+        //TODO: Fix genetic algorithm
+        //if (frameCount % generationLength == 0)
+        //    this.genetics();
     }
 
     draw() {
@@ -258,6 +279,7 @@ class Room {
         graphics.endFill();
     }
 
+    //TODO: Fix genetic algorithm
     genetics() {
         //fitness sorting
         this.creatures.sort((b, a) => (a.fitness > b.fitness) ? 1 : -1);
@@ -282,7 +304,7 @@ function worldLoop(delta){
         }
     }
     frameCount++;
-    $('#controls').text(frameCount);
+    //$('#controls').text(frameCount);
   }
 
   $("body").mousemove(function(event) {

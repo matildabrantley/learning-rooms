@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Yomogi&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" 
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    
     <link rel="stylesheet" href="./assets/css/style.css" />
     <title>Synaptic Ecosystem</title>
 </head>
@@ -11,11 +17,37 @@
 
     <div class="full-grid">
         <header>
-          <h1>Synaptic Ecosystem</h1>
+          <h1>Learning Rooms</h1>
         </header>
       
         <nav id="controls">
-
+            <h3>Controls</h3>
+            <div class="form-check">
+                <h4>Laser Pointer</h4>
+                <input class="form-check-input" type="radio" name="laser-radios" id="random-motion" value="option1" checked>
+                <label class="form-check-label" for="radios1">
+                  Random motion 
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="laser-radios" id="random-jumping" value="option2">
+                <label class="form-check-label" for="radios2">
+                  Random jumping
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="laser-radios" id="user-controlled" value="option3">
+                <label class="form-check-label" for="radios3">
+                  User controlled
+                </label>
+                <br><br>
+            </div>
+            
+            <div id="range-container-proto">
+                <h4>Learning Rate</h4>
+                <p>Room 1</p>
+                <input type="range" class="form-range" id="learning-range-proto">
+            </div>
         </nav>
       
         <main id="world">
@@ -23,6 +55,8 @@
         </main>
     </div>
     
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js"></script>
     <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!-- Synapyic.js: Neural Network Library -->
