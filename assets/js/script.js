@@ -6,7 +6,7 @@ var numRooms = 6;
 var initialPop = 10; //initial room population
 var roomNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-var roomFloors = ['/assets/images/carpet2.jpg', '/assets/images/carpet1.jpg'];
+var roomFloors = ['/learning-rooms/assets/images/carpet2.jpg', '/learning-rooms/assets/images/carpet1.jpg'];
 var rangeContainerPrototype = $('#range-container-proto');
 var roomSize = 200;
 var mouseX = 0, mouseY = 0;
@@ -101,7 +101,7 @@ class Creature {
     constructor(room, vector, learningRate = 0.25){
         this.room = room;
         //sprite
-        this.sprite = PIXI.Sprite.from('/assets/images/Cat.png');
+        this.sprite = PIXI.Sprite.from('/learning-rooms/assets/images/Cat.png');
         this.sprite.anchor.set(0.5);
         this.sprite.x = vector.x;
         this.sprite.y = vector.y;
