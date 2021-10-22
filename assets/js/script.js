@@ -1,18 +1,18 @@
-var worldContainer = $(document.getElementById("world"));
-var frameCount = 0; //for controlling framerate, e.g. skipping every other frame
-var fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
-var rooms = [];
-var numRooms = 6;
-var initialPop = 10; //initial room population
-var roomNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
+const worldContainer = $(document.getElementById("world"));
+let frameCount = 0; //for controlling framerate, e.g. skipping every other frame
+let fpsReduction = 1; //1 = normal fps, 2 = half fps, 60 = 1 fps, and so forth
+const rooms = [];
+let numRooms = 6;
+let initialPop = 10; //initial room population
+const roomNames = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N',
                       'O','P','Q','R','S','T','U','V','W','X','Y','Z'];
-var roomFloors = ['/learning-rooms/assets/images/carpet2.jpg', '/learning-rooms/assets/images/carpet1.jpg'];
-var rangeContainerPrototype = $('#range-container-proto');
-var roomSize = 200;
-var mouseX = 0, mouseY = 0;
-var learningPeriod = 200; //number of frames that backpropagation occurs
-var generationLength = 1000; //frequency of fitness sorting and genetic changes
-var laserControl = "option1";
+const roomFloors = ['/learning-rooms/assets/images/carpet2.jpg', '/learning-rooms/assets/images/carpet1.jpg'];
+const rangeContainerPrototype = $('#range-container-proto');
+const roomSize = 200;
+let mouseX = 0, mouseY = 0;
+let learningPeriod = 200; //number of frames that backpropagation occurs
+let generationLength = 1000; //frequency of fitness sorting and genetic changes
+let laserControl = "option1";
 
 //Create a Pixi Application
 let app = new PIXI.Application({antialias: true });
@@ -37,7 +37,7 @@ class RedDot {
     }
 
     update () {
-        var rebound = 10;
+        let rebound = 10;
         //out of bounds check
         if (this.position.x > this.room.size-rebound){
             this.velocity.x = -this.velocity.x * 0.8;
@@ -57,7 +57,7 @@ class RedDot {
         }
 
 
-        var laserRadios = document.getElementsByName('laser-radios');
+        const laserRadios = document.getElementsByName('laser-radios');
         for(let i = 0; i < laserRadios.length; i++) {
             if (i == 0 && laserRadios[i].checked) {
                 let speed = $('#laser-speed').val();
@@ -128,16 +128,16 @@ class Creature {
         //console.log(this.network);
 
         //get this room's size and its red dot
-        var roomSize = this.room.size;
-        var redDot = this.room.redDot; 
+        const roomSize = this.room.size;
+        const redDot = this.room.redDot; 
         
         //normalize positions by room size (for NN inputs)
-        var input = [(redDot.position.x / roomSize), (redDot.position.y / roomSize)];
+        const input = [(redDot.position.x / roomSize), (redDot.position.y / roomSize)];
                    //(this.position.x / roomSize), (redDot.position.y / roomSize)];
-        var output = this.network.activate(input);
+        const output = this.network.activate(input);
 
         //the vector to be changed by output, such as velocity or accel
-        var changing = this.accel; 
+        const changing = this.accel; 
 
         //update creature's acceleration from output
         changing.x = output[0] > 0.5 ? output[0] : output[0] - 1;
@@ -146,9 +146,9 @@ class Creature {
         //console.log(changing);
 
         // find intended output so NN can learn
-        var intendedX = this.position.x > redDot.position.x ? 0 : 1;
-        var intendedY = this.position.y > redDot.position.y ? 0 : 1;
-        var intendedOutput = [intendedX, intendedY];
+        const intendedX = this.position.x > redDot.position.x ? 0 : 1;
+        const intendedY = this.position.y > redDot.position.y ? 0 : 1;
+        const intendedOutput = [intendedX, intendedY];
         //console.log("intendedOutput");
         //console.log(intendedOutput);
 
@@ -164,7 +164,7 @@ class Creature {
         this.position.add(this.velocity);
 
         //out of bounds check
-        var rebound = 5;
+        const rebound = 5;
         if (this.position.x > this.room.size-rebound){
             this.velocity.x = -this.velocity.x;
             this.position.x -= rebound;
