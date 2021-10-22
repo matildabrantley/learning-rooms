@@ -15,7 +15,7 @@ let generationLength = 1000; //frequency of fitness sorting and genetic changes
 let laserControl = "option1";
 
 //Create a Pixi Application
-let app = new PIXI.Application({antialias: true });
+const app = new PIXI.Application({antialias: true });
 //Add the canvas that Pixi automatically created for you to the HTML document
 worldContainer.append(app.view);
 const graphics = new PIXI.Graphics();
@@ -194,10 +194,10 @@ class Creature {
     }
 
     mutate(rate, scale = 2) {
-        var net = this.network;
+        const net = this.network;
         //mutate weights from input
-        for (var j in net.layers.input.list){
-            for (var k in net.layers.input.list[j].connections.projected) {
+        for (let j in net.layers.input.list){
+            for (let k in net.layers.input.list[j].connections.projected) {
                 if (rate > Math.random()) {
                     net.layers.input.list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
                     net.layers.input.list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
@@ -206,9 +206,9 @@ class Creature {
         }
         
         //mutate weights from hidden layers       
-        for (var i = 0; i < net.layers.hidden.length; i++){
-            for (var j in net.layers.hidden[i].list){
-                for (var k in net.layers.hidden[i].list[j].connections.projected){
+        for (let i = 0; i < net.layers.hidden.length; i++){
+            for (let j in net.layers.hidden[i].list){
+                for (let k in net.layers.hidden[i].list[j].connections.projected){
                     if (rate > Math.random()){
                         net.layers.hidden[i].list[j].connections.projected[k].to.bias = (Math.random()-0.5) * scale;
                         net.layers.hidden[i].list[j].connections.projected[k].weight = (Math.random()-0.5) * scale;
@@ -244,7 +244,7 @@ class Room {
 
         this.pop = pop; //population
         this.creatures = new Array(pop);
-        for (var c = 0; c < pop; c++)
+        for (let c = 0; c < pop; c++)
             this.creatures[c] = new Creature(this, new Vector2d(rand(0, size), rand(0, size))); //random positions
 
         this.redDot = new RedDot(this, new Vector2d((size)/2, (size)/2));
@@ -254,7 +254,7 @@ class Room {
         this.learningRate = this.rangeSlider.val();
 
         this.redDot.update();
-        for (var c=0; c < this.pop; c++) 
+        for (let c=0; c < this.pop; c++) 
             this.creatures[c].update();
 
         this.draw();
@@ -276,7 +276,7 @@ class Room {
         this.creatures.sort((b, a) => (a.fitness > b.fitness) ? 1 : -1);
         
         //the better the fitness, the lower the mutation rate
-        for (var c=0; c < this.pop; c++) {
+        for (let c=0; c < this.pop; c++) {
             this.creatures[c].mutate((c+1) / this.pop);
             this.creatures[c].fitness = 0;
         }
@@ -290,7 +290,7 @@ class Room {
 function worldLoop(delta){
     if (frameCount % fpsReduction === 0) {
         graphics.clear();
-        for (var i=0; i < numRooms; i++){
+        for (let i=0; i < numRooms; i++){
             rooms[i].update();
         }
     }
@@ -310,16 +310,16 @@ function rand(min, max) {
 
 function start() {
     //create rooms
-    var margin = 1.3;
-    for (var i=0, col=0, row=0; i < numRooms; i++) {
-        var originX = roomSize * col * margin;
-        var originY = roomSize * row * margin;
+    const margin = 1.3;
+    for (let i=0, col=0, row=0; i < numRooms; i++) {
+        const originX = roomSize * col * margin;
+        const originY = roomSize * row * margin;
 
-        var rangeContainer = rangeContainerPrototype.clone();
+        const rangeContainer = rangeContainerPrototype.clone();
         rangeContainer.attr("id", "learning-rate" + roomNames[i]);
         rangeContainer.children().eq(0).text("Room " + roomNames[i] + " Learning Rate")
         rangeContainer.appendTo('#controls');
-        var rangeSlider = rangeContainer.children().eq(1);
+        const rangeSlider = rangeContainer.children().eq(1);
         rangeSlider.attr("value", (i+0.1)/6)
         console.log(rangeContainer.children().eq(1));
         rooms.push(new Room(roomNames[i], roomFloors[i % roomFloors.length], rangeContainer.children().eq(1), originX+50, originY+50, roomSize, initialPop));
