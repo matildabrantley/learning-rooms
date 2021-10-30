@@ -12,7 +12,7 @@ const roomSize = 200;
 let mouseX = 0, mouseY = 0;
 let learningPeriod = 200; //number of frames that backpropagation occurs
 let generationLength = 1000; //frequency of fitness sorting and genetic changes
-let laserControl = "option1";
+let laserControl = "option1"; //option 1 is semi-random laser motion
 
 //Create a Pixi Application
 const app = new PIXI.Application({antialias: true });
@@ -20,7 +20,7 @@ const app = new PIXI.Application({antialias: true });
 worldContainer.append(app.view);
 const graphics = new PIXI.Graphics();
 
-//Something for cats/creatures to chase
+//Target for agents (in this case cats) to chase within bounds of Room
 class RedDot {
     constructor(room, vector)
     {
@@ -80,23 +80,27 @@ class RedDot {
         this.draw();
     }
 
+    //mimics random movement of a human-controlled laser pointer
     randomMove (motion=1){
         this.velocity.x += (Math.random() - 0.5) * motion;
         this.velocity.y += (Math.random() - 0.5) * motion;
     }
 
+    //slow drifting
     randomVibrate (motion=1){
         this.velocity.x = (Math.random() - 0.5) * motion;
         this.velocity.y = (Math.random() - 0.5) * motion;
     }
 
+    //instantly moves the laser pointer to a random location within the room
+    //used for training to prevent local overfitting
     randomTeleport () {
         this.position.x = rand(0, this.room.size);
         this.position.y = rand(0, this.room.size);
     }
 }
 
-//only cats for now
+//Agents subject to training by backpropagation (or mutation and selection)
 class Creature {
     constructor(room, vector, learningRate = 0.25){
         this.room = room;
@@ -119,11 +123,13 @@ class Creature {
     }
 
     draw() {
+        //when no sprite is present, draw a circle
         graphics.lineStyle(1, 0xffffff); 
         graphics.drawCircle(this.position.x + this.room.originX, this.position.y + this.room.originY, 1);
         graphics.endFill();
     }
 
+    //Input received, output returned and motion within simulation adjusted accordingly
     update() {
         //console.log(this.network);
 
@@ -193,6 +199,8 @@ class Creature {
         this.fitness += this.position.x + this.position.y;
     }
 
+    //Mutating individual neural weights for a given rate and scale
+    //This is intended be used in conjunction with gradient descent training methods, not as a replacement
     mutate(rate, scale = 2) {
         const net = this.network;
         //mutate weights from input
@@ -221,7 +229,7 @@ class Creature {
     replace() {}
 }
 
-//isolated 'ecosystems'
+//Rooms are isolated training 'ecosystems', each with a target (RedDot)
 class Room {
     constructor(name, floor, rangeSlider, originX, originY, size, pop){
 
@@ -236,14 +244,17 @@ class Room {
         //range slider in controls
         this.rangeSlider = rangeSlider;
 
+        //walls of room
         this.originX = originX;
         this.originY = originY;
         this.maxX = originX + size;
         this.maxY = originY + size;
         this.size = size;
 
-        this.pop = pop; //population
+        this.pop = pop; //population size
         this.creatures = new Array(pop);
+
+        //create creatures
         for (let c = 0; c < pop; c++)
             this.creatures[c] = new Creature(this, new Vector2d(rand(0, size), rand(0, size))); //random positions
 
@@ -251,6 +262,7 @@ class Room {
     }
 
     update() {
+        //set this room's learning rate to range slider value
         this.learningRate = this.rangeSlider.val();
 
         this.redDot.update();
@@ -264,6 +276,7 @@ class Room {
     }
 
     draw() {
+        //draw outline of room
         graphics.lineStyle(2, 0x800000); 
         //graphics.beginFill(0xff0000);
         graphics.drawRoundedRect(this.originX, this.originY, this.size, this.size, 10);
@@ -281,12 +294,13 @@ class Room {
             this.creatures[c].fitness = 0;
         }
 
+        //sync Room's population with creatures array
         this.pop = this.creatures.length;
     }
 
 }
 
-//cat converges on the red dot in the middle of the room
+//Agent (cat) converges on the red dot in the middle of the room
 function worldLoop(delta){
     if (frameCount % fpsReduction === 0) {
         graphics.clear();
@@ -308,13 +322,16 @@ function rand(min, max) {
     return (Math.random() * (max - min) + min);
 }
 
+//Initialize each Room with PIXI.js and begin simulation/training
 function start() {
     //create rooms
     const margin = 1.3;
     for (let i=0, col=0, row=0; i < numRooms; i++) {
+        //establish base coordinates for each room
         const originX = roomSize * col * margin;
         const originY = roomSize * row * margin;
 
+        //clone a prototype of range element's container to be used for each Room (six currently)
         const rangeContainer = rangeContainerPrototype.clone();
         rangeContainer.attr("id", "learning-rate" + roomNames[i]);
         rangeContainer.children().eq(0).text("Room " + roomNames[i] + " Learning Rate")
